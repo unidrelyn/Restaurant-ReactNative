@@ -1,16 +1,51 @@
 import React, { useState } from "react";
-import { Text, StyleSheet, View, ScrollView } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Input, Icon, Button } from "react-native-elements";
-import { validateEmail } from "../../utils/validations/";
+import { size, isEmpty } from "lodash";
+import { useNavigation } from "@react-navigation/native";
+import * as firebase from "firebase";
 
-export default function RegisterForm() {
+import { validateEmail } from "../../utils/validations/";
+import Loading from "../Loading";
+
+export default function RegisterForm({ toastRef, ...props }) {
 	const [showPassword, setshowPassword] = useState(true);
 	const [showRepeatPassword, setshowRepeatPassword] = useState(true);
 	const [formData, setformData] = useState(defaultFormValue);
+	const [creating, setCreating] = useState(false);
+
+	let email = formData.email,
+		emailValidate = validateEmail(email),
+		password = formData.password,
+		repeatPassword = formData.repeatPassword;
+
+	const navigation = useNavigation();
+
+	const sendFirebase = () => {
+		setCreating(true);
+		firebase
+			.auth()
+			.createUserWithEmailAndPassword(email, password)
+			.then(() => {
+				setCreating(false);
+				navigation.navigate("account");
+			})
+			.catch(() => {
+				setCreating(false);
+				toastRef.current.show("User is already registered");
+			});
+	};
 
 	const onSubmit = () => {
-		console.log(formData);
-		console.log(validateEmail(formData.email));
+		isEmpty(email) || isEmpty(password) || isEmpty(repeatPassword)
+			? toastRef.current.show("all fields are required")
+			: emailValidate
+			? size(password) >= 6
+				? password === repeatPassword
+					? sendFirebase()
+					: toastRef.current.show("passwords do not match ")
+				: toastRef.current.show("password must be longer than 6 characters ")
+			: toastRef.current.show("invalid email ");
 	};
 
 	const onChange = (e, type) => {
@@ -70,6 +105,7 @@ export default function RegisterForm() {
 				buttonStyle={styles.btnRegister}
 				onPress={onSubmit}
 			/>
+			<Loading isVisible={creating} text="Creating Account" />
 		</View>
 	);
 }

@@ -7,7 +7,6 @@ import RestaurantsStack from "./RestaurantsStack";
 import FavoritesStack from "./FavoritesStack";
 import TopRestarantsStack from "./TopRestarantsStack";
 import SearchStack from "./SearchStack";
-
 import AccountStack from "./AccountStack";
 
 const Tab = createBottomTabNavigator();
